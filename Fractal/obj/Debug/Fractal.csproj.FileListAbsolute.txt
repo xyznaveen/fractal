@@ -1,1 +1,10 @@
 F:\TBC\Mandelbrot\Fractal\Fractal\bin\Debug\Fractal.exe.config
+F:\TBC\Mandelbrot\Fractal\Fractal\obj\Debug\Fractal.csprojResolveAssemblyReference.cache
+F:\TBC\Mandelbrot\Fractal\Fractal\obj\Debug\Fractal.Properties.Resources.resources
+F:\TBC\Mandelbrot\Fractal\Fractal\obj\Debug\Fractal.csproj.GenerateResource.Cache
+F:\TBC\Mandelbrot\Fractal\Fractal\bin\Debug\Fractal.exe
+F:\TBC\Mandelbrot\Fractal\Fractal\bin\Debug\Fractal.pdb
+F:\TBC\Mandelbrot\Fractal\Fractal\obj\Debug\Fractal.exe
+F:\TBC\Mandelbrot\Fractal\Fractal\obj\Debug\Fractal.pdb
+F:\TBC\Mandelbrot\Fractal\Fractal\obj\Debug\Fractal.frame.resources
+F:\TBC\Mandelbrot\Fractal\Fractal\obj\Debug\Fractal.RootForm.resources
