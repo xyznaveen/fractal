@@ -160,6 +160,7 @@
             this.canvas.Size = new System.Drawing.Size(640, 492);
             this.canvas.TabIndex = 0;
             this.canvas.TabStop = false;
+            this.canvas.Paint += new System.Windows.Forms.PaintEventHandler(this.canvas_Paint);
             // 
             // RootForm
             // 
