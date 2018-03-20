@@ -71,6 +71,67 @@ namespace Fractal
             graphics.DrawImage(picture, 0, 0);
         }
 
+        private void canvas_MouseDown(object sender, MouseEventArgs e)
+        {
+            action = true;
+            if (action)
+            {
+                xs = e.X;
+                ys = e.Y;
+                rectangle = true;
+            }
+        }
+
+        private void canvas_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (action)
+            {
+                xe = e.X;
+                ye = e.Y;
+                Graphics g = canvas.CreateGraphics();
+                update(g);
+            }
+        }
+
+        private void canvas_MouseUp(object sender, MouseEventArgs e)
+        {
+            int z, w;
+
+            if (action)
+            {
+                xe = e.X;
+                ye = e.Y;
+                if (xs > xe)
+                {
+                    z = xs;
+                    xs = xe;
+                    xe = z;
+                }
+                if (ys > ye)
+                {
+                    z = ys;
+                    ys = ye;
+                    ye = z;
+                }
+                w = (xe - xs);
+                z = (ye - ys);
+                if ((w < 2) && (z < 2)) initvalues();
+                else
+                {
+                    if (((float)w > (float)z * xy)) ye = (int)((float)ys + (float)w / xy);
+                    else xe = (int)((float)xs + (float)z * xy);
+                    xende = xstart + xzoom * (double)xe;
+                    yende = ystart + yzoom * (double)ye;
+                    xstart += xzoom * (double)xs;
+                    ystart += yzoom * (double)ys;
+                }
+                xzoom = (xende - xstart) / (double)x1;
+                yzoom = (yende - ystart) / (double)y1;
+                rectangle = false;
+                mandelbrot();
+            }
+        }
+
         /// <summary>
         /// Below lies the equivalent working C# code from Java source
         /// </summary>
@@ -160,6 +221,28 @@ namespace Fractal
             action = true;
         }
 
+        public void update(Graphics g)
+        {
+
+            Pen pen = new Pen(Color.White, 3);
+
+            g.DrawImage(picture, 0, 0);
+
+            if (rectangle)
+            {
+                if (xs < xe)
+                {
+                    if (ys < ye) g.DrawRectangle(pen, xs, ys, (xe - xs), (ye - ys));
+                    else g.DrawRectangle(pen, xs, ye, (xe - xs), (ys - ye));
+                }
+                else
+                {
+                    if (ys < ye) g.DrawRectangle(pen, xe, ys, (xs - xe), (ye - ys));
+                    else g.DrawRectangle(pen, xe, ye, (xs - xe), (ys - ye));
+                }
+            }
+        }
+
         /// <summary>
         /// Used by the main algorithm for coloring the points.
         /// </summary>
@@ -246,7 +329,7 @@ namespace Fractal
             palette[4] = Color.FromArgb(rn.Next(255), rn.Next(255), rn.Next(255), rn.Next(255));
             palette[5] = Color.FromArgb(rn.Next(255), rn.Next(255), rn.Next(255), rn.Next(255));
         }
-
+        
         /// <summary>
         /// End of additional source code
         /// </summary>
