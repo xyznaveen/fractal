@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows.Forms;
 
 namespace Fractal
@@ -16,6 +20,8 @@ namespace Fractal
         // Used as a global variable to hold the color palette information to use in
         // the generation of mandlebrot set.
         public static Color[] palette = new Color[6];
+        public static Color[] defaultPalette = new Color[6];
+        private static string ConfigFileName = "mandelbrot-state";
 
         // Instance variables
         private static int x1;
@@ -45,14 +51,18 @@ namespace Fractal
         private static bool finished;
 
         private bool isSessionLaunched = true;
+        private bool hasSavedColor = false;
 
         private Cursor c1;
         private Cursor c2;
         private Image picture;
-        private Image tempPicture;
         private Graphics g1;
 
         private HSB HSBcol;
+
+        private static RootForm context;
+
+        private System.Windows.Forms.Timer timerColorChange;
 
         public RootForm()
         {
@@ -64,7 +74,13 @@ namespace Fractal
         {
             init();
             start();
+            context = this;
+            timerColorChange = new System.Windows.Forms.Timer();
+            
         }
+
+
+        
         private void canvas_Paint(object sender, PaintEventArgs e)
         {
             Graphics graphics = e.Graphics;
@@ -156,16 +172,16 @@ namespace Fractal
 
         private void initvalues() // reset start values
         {
-
+            
             string[] state = readValues();
 
             if (isSessionLaunched && state.Length > 0)
             {
                 isSessionLaunched = false;
-                xstart = float.Parse(state[6]);
-                ystart = float.Parse(state[7]);
-                xende = float.Parse(state[8]);
-                yende = float.Parse(state[9]);
+                xstart = float.Parse(state[0]);
+                ystart = float.Parse(state[1]);
+                xende = float.Parse(state[2]);
+                yende = float.Parse(state[3]);
             }
             else
             {
@@ -182,10 +198,10 @@ namespace Fractal
         {
             action = false;
             rectangle = false;
-            randomPalette();
             initvalues();
             xzoom = (xende - xstart) / (double)x1;
             yzoom = (yende - ystart) / (double)y1;
+            initColors();
             mandelbrot();
         }
 
@@ -195,7 +211,7 @@ namespace Fractal
         /// </summary>
         private void mandelbrot()
         {
-            Console.WriteLine("Is being called");
+            //initColors();
             int x, y;
             float h, b, alt = 0.0f;
 
@@ -224,7 +240,7 @@ namespace Fractal
         public void update(Graphics g)
         {
 
-            Pen pen = new Pen(Color.White, 3);
+            Pen pen = new Pen(Color.White, 1);
 
             g.DrawImage(picture, 0, 0);
 
@@ -274,62 +290,172 @@ namespace Fractal
 
         private string[] readValues()
         {
-            string line = " ";
-            string temp = "";
             string[] list = { };
-            try
+            bool theFileExists = File.Exists(ConfigFileName);
+
+            if (theFileExists)
             {
-                System.IO.StreamReader file = new System.IO.StreamReader("config.txt");
-                while ((line = file.ReadLine()) != null)
+                string line = " ";
+                string temp = "";
+                try
                 {
-                    temp += (line + ",");
+                    System.IO.StreamReader file = new System.IO.StreamReader(ConfigFileName);
+                    while ((line = file.ReadLine()) != null)
+                    {
+                        temp += (line + ",");
+                    }
+                    list = temp.Split(',');
+                    file.Close();
                 }
-                list = temp.Split(',');
-                file.Close();
+                catch (Exception) { }
             }
-            catch (Exception) { }
 
             return list;
         }
-
-        private void colorCycling()
-        {
-
-            try
-            {
-
-                System.Drawing.Imaging.ColorPalette palette = tempPicture.Palette;
-                //palette.Entries[0] = Color.Black;
-                Random rn = new Random();
-
-                for (int i = 1; i < 256; i++)
-                {
-                    palette.Entries[i] = Color.FromArgb(rn.Next(255), rn.Next(255), rn.Next(255));
-                }
-
-                tempPicture.Palette = palette;
-            }
-            catch (Exception)
-            {
-            }
-
-        }
-
-        private void randomPalette()
-        {
-            // TO generate random set of numbers for color
-            Random rn = new Random();
-
-            // Based on the HSB algorithm there are a total of 6 conditions
-            // The clor will be random as the <code>rn</code> will be used to generate set of colors
-            palette[0] = Color.FromArgb(rn.Next(255), rn.Next(255), rn.Next(255), rn.Next(255));
-            palette[1] = Color.FromArgb(rn.Next(255), rn.Next(255), rn.Next(255), rn.Next(255));
-            palette[2] = Color.FromArgb(rn.Next(255), rn.Next(255), rn.Next(255), rn.Next(255));
-            palette[3] = Color.FromArgb(rn.Next(255), rn.Next(255), rn.Next(255), rn.Next(255));
-            palette[4] = Color.FromArgb(rn.Next(255), rn.Next(255), rn.Next(255), rn.Next(255));
-            palette[5] = Color.FromArgb(rn.Next(255), rn.Next(255), rn.Next(255), rn.Next(255));
-        }
         
+        private void initColors()
+        {
+            
+            if(!hasSavedColor) // If there are no color saved
+            {
+                for (var i = 0; i < 6; ++i)
+                {
+                    palette[i] = Color.FromArgb(255, 255, 255);
+                }
+                return;
+            }
+
+            randomizeColors();
+        }
+
+        private void randomizeColors()
+        {
+            Random rn = new Random();
+            palette = new Color[6];
+            for (var i = 0; i < 6; ++i)
+            {
+                palette[i] = Color.FromArgb(rn.Next(255), rn.Next(255), rn.Next(255));
+            }
+        }
+
+        private void newColors()
+        {
+            palette[0] = Color.FromArgb(226, 125, 96);
+            palette[1] = Color.FromArgb(133, 220, 188);
+            palette[2] = Color.FromArgb(232, 168, 124);
+            palette[3] = Color.FromArgb(195, 141, 158);
+            palette[4] = Color.FromArgb(65, 179, 163);
+            palette[5] = Color.FromArgb(26, 125, 240);
+        }
+
+        private void colorGroup()
+        {
+            Color[] tempCol = new Color[6];
+
+            tempCol[0] = palette[1];
+            tempCol[1] = palette[2];
+            tempCol[2] = palette[3];
+            tempCol[3] = palette[4];
+            tempCol[4] = palette[5];
+            tempCol[5] = palette[0];
+
+            palette = tempCol;
+            Console.WriteLine(tempCol[0].R);
+
+            mandelbrot();
+        }
+
+        private bool deleteConfigurationFile(string filePath)
+        {
+            bool fileWasFound = File.Exists(filePath);
+            if (fileWasFound)
+                File.Delete(filePath);
+
+            return fileWasFound;
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "JPeg Image| *.jpg | Bitmap Image | *.bmp | Gif Image | *.gif | Png Image | *.png";
+            saveFileDialog.Title = "Save file as Image.";
+            saveFileDialog.ShowDialog();
+
+
+            if (saveFileDialog.FileName != "")
+            {
+                System.IO.FileStream fileStream = (System.IO.FileStream)saveFileDialog.OpenFile();
+                switch (saveFileDialog.FilterIndex)
+                {
+                    case 1:
+                        {
+                            // JPEG
+                            picture.Save(fileStream, System.Drawing.Imaging.ImageFormat.Jpeg);
+                            break;
+                        }
+                    case 2:
+                        {
+                            // BMP
+                            picture.Save(fileStream, System.Drawing.Imaging.ImageFormat.Bmp);
+                            break;
+                        }
+                    case 3:
+                        {
+                            // GIF
+                            picture.Save(fileStream, System.Drawing.Imaging.ImageFormat.Gif);
+                            break;
+                        }
+                    case 4:
+                        {
+                            // PNG
+                            picture.Save(fileStream, System.Drawing.Imaging.ImageFormat.Png);
+                            break;
+                        }
+                }
+                fileStream.Close();
+            }
+        }
+
+        private void saveCurrentScreenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            saveCurrentState();
+        }
+
+        private void saveCurrentState()
+        {
+            StreamWriter file = new StreamWriter(ConfigFileName);
+            file.WriteLine(xstart);
+            file.WriteLine(ystart);
+            file.WriteLine(xende);
+            file.WriteLine(yende);
+            file.Close();
+        }
+
+        private void resetSavedStateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            bool fileWasDeleted = deleteConfigurationFile(ConfigFileName);
+
+            if (fileWasDeleted)
+                MessageBox.Show("Configuration was deleted.");
+
+        }
+
+        private void changeColorsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            newColors();
+            mandelbrot();
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            colorGroup();
+        }
+
         /// <summary>
         /// End of additional source code
         /// </summary>
