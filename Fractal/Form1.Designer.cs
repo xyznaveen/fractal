@@ -33,11 +33,13 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveCurrentScreenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resetSavedStateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.configToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resetColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.changeColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.startStopColorCyclingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
@@ -70,6 +72,7 @@
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.saveAsToolStripMenuItem,
             this.saveCurrentScreenToolStripMenuItem,
+            this.loadStateToolStripMenuItem,
             this.resetSavedStateToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.ForeColor = System.Drawing.Color.Snow;
@@ -94,6 +97,14 @@
             this.saveCurrentScreenToolStripMenuItem.Text = "Save State";
             this.saveCurrentScreenToolStripMenuItem.Click += new System.EventHandler(this.saveCurrentScreenToolStripMenuItem_Click);
             // 
+            // loadStateToolStripMenuItem
+            // 
+            this.loadStateToolStripMenuItem.Name = "loadStateToolStripMenuItem";
+            this.loadStateToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.L)));
+            this.loadStateToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
+            this.loadStateToolStripMenuItem.Text = "Load State";
+            this.loadStateToolStripMenuItem.Click += new System.EventHandler(this.loadStateToolStripMenuItem_Click);
+            // 
             // resetSavedStateToolStripMenuItem
             // 
             this.resetSavedStateToolStripMenuItem.Name = "resetSavedStateToolStripMenuItem";
@@ -113,7 +124,8 @@
             // 
             this.configToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.resetColorsToolStripMenuItem,
-            this.changeColorsToolStripMenuItem});
+            this.changeColorsToolStripMenuItem,
+            this.startStopColorCyclingToolStripMenuItem});
             this.configToolStripMenuItem.ForeColor = System.Drawing.Color.Snow;
             this.configToolStripMenuItem.Name = "configToolStripMenuItem";
             this.configToolStripMenuItem.Size = new System.Drawing.Size(55, 20);
@@ -122,15 +134,23 @@
             // resetColorsToolStripMenuItem
             // 
             this.resetColorsToolStripMenuItem.Name = "resetColorsToolStripMenuItem";
-            this.resetColorsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.resetColorsToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
             this.resetColorsToolStripMenuItem.Text = "Reset Colors";
+            this.resetColorsToolStripMenuItem.Click += new System.EventHandler(this.resetColorsToolStripMenuItem_Click);
             // 
             // changeColorsToolStripMenuItem
             // 
             this.changeColorsToolStripMenuItem.Name = "changeColorsToolStripMenuItem";
-            this.changeColorsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.changeColorsToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
             this.changeColorsToolStripMenuItem.Text = "Change Colors";
             this.changeColorsToolStripMenuItem.Click += new System.EventHandler(this.changeColorsToolStripMenuItem_Click);
+            // 
+            // startStopColorCyclingToolStripMenuItem
+            // 
+            this.startStopColorCyclingToolStripMenuItem.Name = "startStopColorCyclingToolStripMenuItem";
+            this.startStopColorCyclingToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.startStopColorCyclingToolStripMenuItem.Text = "Toggle Color Cycling";
+            this.startStopColorCyclingToolStripMenuItem.Click += new System.EventHandler(this.startStopColorCyclingToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -200,8 +220,7 @@
             // 
             // timer1
             // 
-            this.timer1.Enabled = true;
-            this.timer1.Interval = 300;
+            this.timer1.Interval = 700;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // RootForm
@@ -218,6 +237,7 @@
             this.Name = "RootForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Mandelbrot Fractal Solution";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.RootForm_FormClosing);
             this.Load += new System.EventHandler(this.RootForm_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
@@ -249,6 +269,8 @@
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem resetSavedStateToolStripMenuItem;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.ToolStripMenuItem startStopColorCyclingToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loadStateToolStripMenuItem;
     }
 }
 

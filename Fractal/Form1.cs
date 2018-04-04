@@ -21,7 +21,7 @@ namespace Fractal
         // the generation of mandlebrot set.
         public static Color[] palette = new Color[6];
         public static Color[] defaultPalette = new Color[6];
-        private static string ConfigFileName = "mandelbrot-state";
+        private static string ConfigFileName = "state.mdlbrt";
 
         // Instance variables
         private static int x1;
@@ -52,6 +52,7 @@ namespace Fractal
 
         private bool isSessionLaunched = true;
         private bool hasSavedColor = false;
+        private bool colorIsCycling = false;
 
         private Cursor c1;
         private Cursor c2;
@@ -173,7 +174,7 @@ namespace Fractal
         private void initvalues() // reset start values
         {
             
-            string[] state = readValues();
+            string[] state = readValues(ConfigFileName);
 
             if (isSessionLaunched && state.Length > 0)
             {
@@ -211,7 +212,6 @@ namespace Fractal
         /// </summary>
         private void mandelbrot()
         {
-            //initColors();
             int x, y;
             float h, b, alt = 0.0f;
 
@@ -288,10 +288,10 @@ namespace Fractal
         /// Additional source code will be added below
         /// </summary>
 
-        private string[] readValues()
+        private string[] readValues(string fileName)
         {
             string[] list = { };
-            bool theFileExists = File.Exists(ConfigFileName);
+            bool theFileExists = File.Exists(fileName);
 
             if (theFileExists)
             {
@@ -299,7 +299,7 @@ namespace Fractal
                 string temp = "";
                 try
                 {
-                    System.IO.StreamReader file = new System.IO.StreamReader(ConfigFileName);
+                    System.IO.StreamReader file = new System.IO.StreamReader(fileName);
                     while ((line = file.ReadLine()) != null)
                     {
                         temp += (line + ",");
@@ -334,33 +334,18 @@ namespace Fractal
             palette = new Color[6];
             for (var i = 0; i < 6; ++i)
             {
-                palette[i] = Color.FromArgb(rn.Next(255), rn.Next(255), rn.Next(255));
+                palette[i] = Color.FromArgb(rn.Next(0,255), rn.Next(0,255), rn.Next(0,255));
             }
-        }
-
-        private void newColors()
-        {
-            palette[0] = Color.FromArgb(226, 125, 96);
-            palette[1] = Color.FromArgb(133, 220, 188);
-            palette[2] = Color.FromArgb(232, 168, 124);
-            palette[3] = Color.FromArgb(195, 141, 158);
-            palette[4] = Color.FromArgb(65, 179, 163);
-            palette[5] = Color.FromArgb(26, 125, 240);
         }
 
         private void colorGroup()
         {
-            Color[] tempCol = new Color[6];
-
-            tempCol[0] = palette[1];
-            tempCol[1] = palette[2];
-            tempCol[2] = palette[3];
-            tempCol[3] = palette[4];
-            tempCol[4] = palette[5];
-            tempCol[5] = palette[0];
-
-            palette = tempCol;
-            Console.WriteLine(tempCol[0].R);
+            Color temp = palette[palette.Length - 1];
+            for (int i = palette.Length - 2; i > -1; i--)
+            {
+                palette[i + 1] = palette[i];
+            }
+            palette[0] = temp;
 
             mandelbrot();
         }
@@ -382,7 +367,7 @@ namespace Fractal
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "JPeg Image| *.jpg | Bitmap Image | *.bmp | Gif Image | *.gif | Png Image | *.png";
+            saveFileDialog.Filter = "JPEG Image| *.jpg | Bitmap Image | *.bmp | Gif Image | *.gif | Png Image | *.png";
             saveFileDialog.Title = "Save file as Image.";
             saveFileDialog.ShowDialog();
 
@@ -423,12 +408,19 @@ namespace Fractal
 
         private void saveCurrentScreenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            saveCurrentState();
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Mandelbrot Save State | *.mdlbrt";
+
+            if(saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                saveCurrentState(saveFileDialog.FileName);
+            }
+
         }
 
-        private void saveCurrentState()
+        private void saveCurrentState(string filePath)
         {
-            StreamWriter file = new StreamWriter(ConfigFileName);
+            StreamWriter file = new StreamWriter(filePath);
             file.WriteLine(xstart);
             file.WriteLine(ystart);
             file.WriteLine(xende);
@@ -447,13 +439,60 @@ namespace Fractal
 
         private void changeColorsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            newColors();
+            randomizeColors();
             mandelbrot();
         }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
             colorGroup();
+        }
+
+        private void startStopColorCyclingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if(colorIsCycling)
+            {
+                timer1.Stop();
+            } else
+            {
+                timer1.Start();
+            }
+            colorIsCycling = !colorIsCycling;
+        }
+
+        private void loadStateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Mandlebrot Saved State | *.mdlbrt";
+            bool fileOpened = openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK;
+
+            if (fileOpened)
+            {
+                string fileToOpen = openFileDialog.FileName;
+                string[] state = readValues(fileToOpen);
+                xstart = float.Parse(state[0]);
+                ystart = float.Parse(state[1]);
+                xende = float.Parse(state[2]);
+                yende = float.Parse(state[3]);
+                xzoom = (xende - xstart) / (double)x1;
+                yzoom = (yende - ystart) / (double)y1;
+                mandelbrot();
+            }
+
+        }
+
+        private void RootForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            saveCurrentState(ConfigFileName);
+        }
+
+        private void resetColorsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            for(int i = 0; i < 6; ++i)
+            {
+                palette[i] = Color.FromArgb(255,255,255);
+            }
+            mandelbrot();
         }
 
         /// <summary>
