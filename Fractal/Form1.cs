@@ -20,7 +20,6 @@ namespace Fractal
         // Used as a global variable to hold the color palette information to use in
         // the generation of mandlebrot set.
         public static Color[] palette = new Color[6];
-        public static Color[] defaultPalette = new Color[6];
         private static string ConfigFileName = "state.mdlbrt";
 
         // Instance variables
@@ -290,7 +289,7 @@ namespace Fractal
 
         private string[] readValues(string fileName)
         {
-            string[] list = { };
+            string[] list = { }; // To hold the state values from file
             bool theFileExists = File.Exists(fileName);
 
             if (theFileExists)
@@ -304,11 +303,13 @@ namespace Fractal
                     {
                         temp += (line + ",");
                     }
-                    list = temp.Split(',');
+                    list = temp.Split(','); // Split the comma separated values to array
                     file.Close();
                 }
                 catch (Exception) { }
             }
+
+            Console.WriteLine(list[7]);
 
             return list;
         }
@@ -320,6 +321,7 @@ namespace Fractal
             {
                 for (var i = 0; i < 6; ++i)
                 {
+                    // Default color 255, 255, 255 
                     palette[i] = Color.FromArgb(255, 255, 255);
                 }
                 return;
@@ -328,6 +330,9 @@ namespace Fractal
             randomizeColors();
         }
 
+        /// <summary>
+        /// The method generates an array of 6 random color and assigns it to the default color palette.
+        /// </summary>
         private void randomizeColors()
         {
             Random rn = new Random();
@@ -338,7 +343,7 @@ namespace Fractal
             }
         }
 
-        private void colorGroup()
+        private void cycleExistingColors()
         {
             Color temp = palette[palette.Length - 1];
             for (int i = palette.Length - 2; i > -1; i--)
@@ -346,8 +351,8 @@ namespace Fractal
                 palette[i + 1] = palette[i];
             }
             palette[0] = temp;
-
             mandelbrot();
+            canvas.Refresh();
         }
 
         private bool deleteConfigurationFile(string filePath)
@@ -425,6 +430,8 @@ namespace Fractal
             file.WriteLine(ystart);
             file.WriteLine(xende);
             file.WriteLine(yende);
+            file.WriteLine(palette[0].R+","+palette[0].R+","+palette[0].R);
+            file.WriteLine(palette[1].R + "," + palette[1].R + "," + palette[1].R);
             file.Close();
         }
 
@@ -433,10 +440,15 @@ namespace Fractal
             bool fileWasDeleted = deleteConfigurationFile(ConfigFileName);
 
             if (fileWasDeleted)
-                MessageBox.Show("Configuration was deleted.");
+                MessageBox.Show("State file has been successfully reset.","Success");
 
         }
 
+        /// <summary>
+        /// This method generates a set of random colors and then redraws the mandelbrot set.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void changeColorsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             randomizeColors();
@@ -445,37 +457,45 @@ namespace Fractal
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            colorGroup();
+            cycleExistingColors();
         }
 
         private void startStopColorCyclingToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(colorIsCycling)
+            if(colorIsCycling)  // Stop color cycling if already running
             {
                 timer1.Stop();
-            } else
+            } else              // Start color cycling
             {
                 timer1.Start();
             }
+
+            // Toggle color cycling condition
             colorIsCycling = !colorIsCycling;
         }
 
         private void loadStateToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
+            
+            // custom file extension
             openFileDialog.Filter = "Mandlebrot Saved State | *.mdlbrt";
             bool fileOpened = openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK;
 
             if (fileOpened)
             {
                 string fileToOpen = openFileDialog.FileName;
+
                 string[] state = readValues(fileToOpen);
                 xstart = float.Parse(state[0]);
                 ystart = float.Parse(state[1]);
                 xende = float.Parse(state[2]);
                 yende = float.Parse(state[3]);
+
+                // Sets the zoom level
                 xzoom = (xende - xstart) / (double)x1;
                 yzoom = (yende - ystart) / (double)y1;
+
                 mandelbrot();
             }
 
@@ -483,12 +503,14 @@ namespace Fractal
 
         private void RootForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            // Save state to the default config file
             saveCurrentState(ConfigFileName);
         }
 
         private void resetColorsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            for(int i = 0; i < 6; ++i)
+            // Resets to default color
+            for (int i = 0; i < 6; ++i)
             {
                 palette[i] = Color.FromArgb(255,255,255);
             }
