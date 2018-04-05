@@ -62,7 +62,6 @@ namespace Fractal
 
         private static RootForm context;
 
-        private System.Windows.Forms.Timer timerColorChange;
 
         public RootForm()
         {
@@ -75,12 +74,8 @@ namespace Fractal
             init();
             start();
             context = this;
-            timerColorChange = new System.Windows.Forms.Timer();
-            
         }
 
-
-        
         private void canvas_Paint(object sender, PaintEventArgs e)
         {
             Graphics graphics = e.Graphics;
@@ -105,7 +100,7 @@ namespace Fractal
                 xe = e.X;
                 ye = e.Y;
                 Graphics g = canvas.CreateGraphics();
-                update(g);
+                Update(g);
             }
         }
 
@@ -144,224 +139,8 @@ namespace Fractal
                 xzoom = (xende - xstart) / (double)x1;
                 yzoom = (yende - ystart) / (double)y1;
                 rectangle = false;
-                mandelbrot();
+                Mandelbrot();
             }
-        }
-
-        /// <summary>
-        /// Below lies the equivalent working C# code from Java source
-        /// </summary>
-
-        // Getting the instances ready, must be called once when the form loads, or
-        // in the constructor
-        public void init() 
-        {
-            finished = false;
-            c1 = Cursors.WaitCursor;
-            c2 = Cursors.Cross;
-            x1 = canvas.Size.Width;
-            y1 = canvas.Size.Height;
-            xy = (float)x1 / (float)y1;
-
-            picture = new Bitmap(x1, y1);
-
-            g1 = Graphics.FromImage(picture);
-
-            finished = true;
-        }
-
-        private void initvalues() // reset start values
-        {
-            
-            string[] state = readValues(ConfigFileName);
-
-            if (isSessionLaunched && state.Length > 0)
-            {
-                isSessionLaunched = false;
-                xstart = float.Parse(state[0]);
-                ystart = float.Parse(state[1]);
-                xende = float.Parse(state[2]);
-                yende = float.Parse(state[3]);
-            }
-            else
-            {
-                xstart = SX;
-                ystart = SY;
-                xende = EX;
-                yende = EY;
-                if ((float)((xende - xstart) / (yende - ystart)) != xy)
-                    xstart = xende - (yende - ystart) * (double)xy;
-            }
-        }
-        
-        public void start()
-        {
-            action = false;
-            rectangle = false;
-            initvalues();
-            xzoom = (xende - xstart) / (double)x1;
-            yzoom = (yende - ystart) / (double)y1;
-            initColors();
-            mandelbrot();
-        }
-
-        /// <summary>
-        /// The mandelbrot set generation algorithm.
-        /// Calculates all the points.
-        /// </summary>
-        private void mandelbrot()
-        {
-            int x, y;
-            float h, b, alt = 0.0f;
-
-            action = false;
-            this.Cursor = c1;
-
-            Pen pen = null;
-
-            for (x = 0; x < x1; x += 2)
-                for (y = 0; y < y1; y++)
-                {
-                    h = pointcolour(xstart + xzoom * (double)x, ystart + yzoom * (double)y); // color value
-                    if (h != alt)
-                    {
-                        b = 1.0f - h * h; // brightnes
-                        Color col = HSB.HSBtoRGB(h, 0.8f, b);
-                        pen = new Pen(col);
-                        alt = h;
-                    }
-                    g1.DrawLine(pen, x, y, x + 1, y);
-                }
-            this.Cursor = c2;
-            action = true;
-        }
-
-        public void update(Graphics g)
-        {
-
-            Pen pen = new Pen(Color.White, 1);
-
-            g.DrawImage(picture, 0, 0);
-
-            if (rectangle)
-            {
-                if (xs < xe)
-                {
-                    if (ys < ye) g.DrawRectangle(pen, xs, ys, (xe - xs), (ye - ys));
-                    else g.DrawRectangle(pen, xs, ye, (xe - xs), (ys - ye));
-                }
-                else
-                {
-                    if (ys < ye) g.DrawRectangle(pen, xe, ys, (xs - xe), (ye - ys));
-                    else g.DrawRectangle(pen, xe, ye, (xs - xe), (ys - ye));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Used by the main algorithm for coloring the points.
-        /// </summary>
-        /// <param name="xwert"></param>
-        /// <param name="ywert"></param>
-        /// <returns></returns>
-        private float pointcolour(double xwert, double ywert) // color value from 0.0 to 1.0 by iterations
-        {
-            double r = 0.0, i = 0.0, m = 0.0;
-            int j = 0;
-
-            while ((j < MAX) && (m < 4.0))
-            {
-                j++;
-                m = r * r - i * i;
-                i = 2.0 * r * i + ywert;
-                r = m + xwert;
-            }
-            return (float)j / (float)MAX;
-        }
-
-        /// <summary>
-        /// End of migrated source code
-        /// </summary>
-
-        /// <summary>
-        /// Additional source code will be added below
-        /// </summary>
-
-        private string[] readValues(string fileName)
-        {
-            string[] list = { }; // To hold the state values from file
-            bool theFileExists = File.Exists(fileName);
-
-            if (theFileExists)
-            {
-                string line = " ";
-                string temp = "";
-                try
-                {
-                    System.IO.StreamReader file = new System.IO.StreamReader(fileName);
-                    while ((line = file.ReadLine()) != null)
-                    {
-                        temp += (line + ",");
-                    }
-                    list = temp.Split(','); // Split the comma separated values to array
-                    file.Close();
-                }
-                catch (Exception) { }
-            }
-
-            Console.WriteLine(list[7]);
-
-            return list;
-        }
-        
-        private void initColors()
-        {
-            
-            if(!hasSavedColor) // If there are no color saved
-            {
-                for (var i = 0; i < 6; ++i)
-                {
-                    // Default color 255, 255, 255 
-                    palette[i] = Color.FromArgb(255, 255, 255);
-                }
-                return;
-            }
-
-            randomizeColors();
-        }
-
-        /// <summary>
-        /// The method generates an array of 6 random color and assigns it to the default color palette.
-        /// </summary>
-        private void randomizeColors()
-        {
-            Random rn = new Random();
-            palette = new Color[6];
-            for (var i = 0; i < 6; ++i)
-            {
-                palette[i] = Color.FromArgb(rn.Next(0,255), rn.Next(0,255), rn.Next(0,255));
-            }
-        }
-
-        private void cycleExistingColors()
-        {
-            Color temp = palette[palette.Length - 1];
-            for (int i = palette.Length - 2; i > -1; i--)
-            {
-                palette[i + 1] = palette[i];
-            }
-            palette[0] = temp;
-            mandelbrot();
-            canvas.Refresh();
-        }
-
-        private bool deleteConfigurationFile(string filePath)
-        {
-            bool fileWasFound = File.Exists(filePath);
-            if (fileWasFound)
-                File.Delete(filePath);
-
-            return fileWasFound;
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -418,30 +197,16 @@ namespace Fractal
 
             if(saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                saveCurrentState(saveFileDialog.FileName);
+                SaveCurrentState(saveFileDialog.FileName);
             }
-
-        }
-
-        private void saveCurrentState(string filePath)
-        {
-            StreamWriter file = new StreamWriter(filePath);
-            file.WriteLine(xstart);
-            file.WriteLine(ystart);
-            file.WriteLine(xende);
-            file.WriteLine(yende);
-            file.WriteLine(palette[0].R+","+palette[0].R+","+palette[0].R);
-            file.WriteLine(palette[1].R + "," + palette[1].R + "," + palette[1].R);
-            file.Close();
         }
 
         private void resetSavedStateToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            bool fileWasDeleted = deleteConfigurationFile(ConfigFileName);
+            bool fileWasDeleted = DeleteConfigurationFile(ConfigFileName);
 
             if (fileWasDeleted)
                 MessageBox.Show("State file has been successfully reset.","Success");
-
         }
 
         /// <summary>
@@ -451,13 +216,13 @@ namespace Fractal
         /// <param name="e"></param>
         private void changeColorsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            randomizeColors();
-            mandelbrot();
+            RandomizeColors();
+            Mandelbrot();
         }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            cycleExistingColors();
+            CycleExistingColors();
         }
 
         private void startStopColorCyclingToolStripMenuItem_Click(object sender, EventArgs e)
@@ -486,37 +251,290 @@ namespace Fractal
             {
                 string fileToOpen = openFileDialog.FileName;
 
-                string[] state = readValues(fileToOpen);
+                string[] state = ReadValues(fileToOpen);
+
                 xstart = float.Parse(state[0]);
                 ystart = float.Parse(state[1]);
                 xende = float.Parse(state[2]);
                 yende = float.Parse(state[3]);
-
+                
                 // Sets the zoom level
                 xzoom = (xende - xstart) / (double)x1;
                 yzoom = (yende - ystart) / (double)y1;
 
-                mandelbrot();
-            }
+                LoadSavedColor(state);
 
+                Mandelbrot();
+            }
         }
 
         private void RootForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             // Save state to the default config file
-            saveCurrentState(ConfigFileName);
+            // When the close buton is pressed on the Window
+            SaveCurrentState(ConfigFileName);
         }
 
         private void resetColorsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // Resets to default color
+            // When the menu item is clicked
             for (int i = 0; i < 6; ++i)
             {
                 palette[i] = Color.FromArgb(255,255,255);
             }
-            mandelbrot();
+            Mandelbrot();
         }
 
+        /// <summary>
+        /// Lines below are converted code from Java source
+        /// </summary>
+
+        // Getting the instances ready, must be called once when the form loads, or
+        // in the constructor
+        public void init() 
+        {
+            finished = false;
+            c1 = Cursors.WaitCursor;
+            c2 = Cursors.Cross;
+            x1 = canvas.Size.Width;
+            y1 = canvas.Size.Height;
+            xy = (float)x1 / (float)y1;
+
+            picture = new Bitmap(x1, y1);
+            g1 = Graphics.FromImage(picture);
+            finished = true;
+        }
+
+        private void initvalues() // reset start values
+        {
+            string[] state = ReadValues(ConfigFileName);
+            if (isSessionLaunched && state.Length > 0)
+            {
+                isSessionLaunched = false;
+                xstart = float.Parse(state[0]);
+                ystart = float.Parse(state[1]);
+                xende = float.Parse(state[2]);
+                yende = float.Parse(state[3]);
+
+                LoadSavedColor(state);
+            }
+            else
+            {
+                xstart = SX;
+                ystart = SY;
+                xende = EX;
+                yende = EY;
+                if ((float)((xende - xstart) / (yende - ystart)) != xy)
+                    xstart = xende - (yende - ystart) * (double)xy;
+            }
+        }
+        
+        public void start()
+        {
+            action = false;
+            rectangle = false;
+            InitColors();
+            initvalues();
+            xzoom = (xende - xstart) / (double)x1;
+            yzoom = (yende - ystart) / (double)y1;
+            Mandelbrot();
+        }
+
+        private void Mandelbrot() // The mandelbrot set generation algorithm
+        {
+            int x, y;
+            float h, b, alt = 0.0f;
+            Pen pen = null;
+
+            action = false;
+            this.Cursor = c1;
+
+            for (x = 0; x < x1; x += 2)
+                for (y = 0; y < y1; y++)
+                {
+                    h = Pointcolour(xstart + xzoom * (double)x, ystart + yzoom * (double)y); // color value
+                    if (h != alt)
+                    {
+                        b = 1.0f - h * h; // brightnes
+                        Color col = HSB.HSBtoRGB(h, 0.8f, b); // Prepare RGB based on HSB
+                        pen = new Pen(col);
+                        alt = h;
+                    }
+                    g1.DrawLine(pen, x, y, x + 1, y);
+                }
+            this.Cursor = c2;
+            action = true;
+        }
+
+        public void Update(Graphics g)  // Update the graphics on the screen
+        {
+            Pen pen = new Pen(Color.White);
+            g.DrawImage(picture, 0, 0);
+            if (rectangle)
+            {
+                if (xs < xe)
+                {
+                    if (ys < ye) g.DrawRectangle(pen, xs, ys, (xe - xs), (ye - ys));
+                    else g.DrawRectangle(pen, xs, ye, (xe - xs), (ys - ye));
+                }
+                else
+                {
+                    if (ys < ye) g.DrawRectangle(pen, xe, ys, (xs - xe), (ye - ys));
+                    else g.DrawRectangle(pen, xe, ye, (xs - xe), (ys - ye));
+                }
+            }
+        }
+
+        private float Pointcolour(double xwert, double ywert) // color value from 0.0 to 1.0 by iterations
+        {
+            double r = 0.0, i = 0.0, m = 0.0;
+            int j = 0;
+
+            while ((j < MAX) && (m < 4.0))
+            {
+                j++;
+                m = r * r - i * i;
+                i = 2.0 * r * i + ywert;
+                r = m + xwert;
+            }
+            return (float)j / (float)MAX;
+        }
+
+        /// <summary>
+        /// End of migrated source code
+        /// </summary>
+
+        /// <summary>
+        /// Additional source code will be added below
+        /// </summary>
+
+        private string[] ReadValues(string fileName)
+        {
+            string[] list = { }; // To hold the state values from file
+            bool theFileExists = File.Exists(fileName);
+
+            if (theFileExists)
+            {
+                string line = " ";
+                string temp = "";
+                try
+                {
+                    System.IO.StreamReader file = new System.IO.StreamReader(fileName);
+                    while ((line = file.ReadLine()) != null)
+                    {
+                        temp += (line + ",");
+                    }
+                    list = temp.Split(','); // Split the comma separated values to array
+                    file.Close();
+                }
+                catch (Exception) { }
+            }
+
+            return list;
+        }
+        
+        private void InitColors()
+        {
+            
+            if(!hasSavedColor) // If there are no color saved
+            {
+                for (var i = 0; i < 6; ++i)
+                {
+                    // Default color 255, 255, 255 
+                    palette[i] = Color.FromArgb(255, 255, 255);
+                }
+                return;
+            }
+
+            RandomizeColors();
+        }
+
+        /// <summary>
+        /// The method generates an array of 6 random color and assigns it to the default color palette.
+        /// </summary>
+        private void RandomizeColors()
+        {
+            Random rn = new Random();
+            palette = new Color[6];
+            for (var i = 0; i < 6; ++i)
+            {
+                palette[i] = Color.FromArgb(rn.Next(0,255), rn.Next(0,255), rn.Next(0,255));
+            }
+        }
+
+        private void CycleExistingColors()
+        {
+            // Hold the last color
+            Color temp = palette[palette.Length - 1];
+
+            // Shift the colors by 1 to the right
+            for (int i = palette.Length - 2; i > -1; i--)
+            {
+                palette[i + 1] = palette[i];
+            }
+
+            // Copy the last color to the first
+            palette[0] = temp;
+
+            // Show the changes on screen
+            Mandelbrot();
+            canvas.Refresh();
+        }
+
+        private bool DeleteConfigurationFile(string filePath)
+        {
+            bool fileWasFound = File.Exists(filePath);
+            if (fileWasFound)
+                File.Delete(filePath);
+
+            return fileWasFound;
+        }
+
+        /// <summary>
+        /// Saves the state information to the configuration file
+        /// </summary>
+        /// <param name="filePath"></param>
+        private void SaveCurrentState(string filePath)
+        {
+            StreamWriter file = new StreamWriter(filePath);
+
+            file.WriteLine(xstart);file.WriteLine(ystart);
+            file.WriteLine(xende);file.WriteLine(yende);
+
+            for(int i =0; i < palette.Length; ++i) // Color palette
+            {
+                file.WriteLine(palette[i].R + "," + palette[i].R + "," + palette[i].R);
+            }
+
+            file.Close();
+        }
+
+        /// <summary>
+        /// Extracts the color from the saved state file and assigns it as the current working palette
+        /// </summary>
+        /// <param name="state"></param>
+        private void LoadSavedColor(string[] state)
+        {
+            // populate color
+            int counter = 0;
+
+            // Index of color starts at 4th line in the saved file
+            for (int i = 4; i < state.Length; i += 3)
+            {
+                try
+                {
+                    if ((i + 3) < state.Length)
+                    {
+                        Color c = Color.FromArgb(int.Parse(state[i]), int.Parse(state[i + 1]), int.Parse(state[i + 2]));
+                        palette[counter] = c;
+                        counter++;
+                    }
+                }
+                catch (Exception ex) { }
+            }
+        }
+        
         /// <summary>
         /// End of additional source code
         /// </summary>
