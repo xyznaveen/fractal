@@ -534,7 +534,28 @@ namespace Fractal
                 catch (Exception ex) { }
             }
         }
-        
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            string title = "About Program!";
+            string content = "-->\t Developed by: Nabin Niroula\n-->\t Email: subtlenv@gmail.com\n-->\t Project : Mandelbrot Set ";
+
+            MessageBox.Show(content ,title);
+
+        }
+
+        private void helpToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            string title = "How to use.";
+            string content = "Chenge color by selecting : Config > Change Colors\n"+
+                "Start or stop color cycling by selecting : Config > Toggle color cycling\n"
+                ;
+
+            MessageBox.Show(content, title);
+
+        }
+
         /// <summary>
         /// End of additional source code
         /// </summary>
